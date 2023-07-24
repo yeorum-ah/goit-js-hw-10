@@ -25,6 +25,7 @@ body {
   background: #fff;
   box-sizing: border-box;
   animation: shadowExpandX 2s linear infinite alternate;
+  display: none;
 }
 
 @keyframes shadowExpandX {

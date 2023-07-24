@@ -1,16 +1,11 @@
 import { fetchBreeds, fetchCatByBreed } from '/src/cat-api';
 import Notiflix from 'notiflix';
-import SlimSelect from 'slim-select';
-new SlimSelect({
-  select: '#slim-select',
-});
 
 const breedSelect = document.querySelector('.breed-select');
 const catInfo = document.querySelector('.cat-info');
 const select = document.querySelector('select');
 const loader = document.querySelector('.loader');
 
-select.classList.remove('breed-select');
 select.addEventListener('change', onSelectChange);
 
 fetchBreeds()
@@ -19,16 +14,27 @@ fetchBreeds()
   })
   .catch(err => promisError(err));
 
+function showLoader() {
+  loader.style.display = 'block';
+}
+
+function hideLoader() {
+  loader.style.display = 'none';
+}
+
 function onSelectChange(e) {
   const id = e.currentTarget.value;
-  loader.classList.remove('loader');
-  select.classList.add('breed-select');
+  showLoader();
   catInfo.classList.add('cat-info');
   fetchCatByBreed(id)
     .then(data => {
       catInfo.innerHTML = createMarkupInfo(data);
+      hideLoader();
     })
-    .catch(err => promisError(err));
+    .catch(err => {
+      promisError(err);
+      hideLoader();
+    });
 }
 
 function createMarkupOption(arr) {
@@ -38,9 +44,6 @@ function createMarkupOption(arr) {
 }
 
 function createMarkupInfo(arr) {
-  loader.classList.add('loader');
-  select.classList.remove('breed-select');
-  catInfo.classList.remove('cat-info');
   return arr
     .map(
       ({
@@ -63,6 +66,4 @@ function promisError(srt) {
   Notiflix.Notify.failure(
     'Oops! Something went wrong! Try reloading the page!'
   );
-
-  loader.classList.replace('loader');
 }
