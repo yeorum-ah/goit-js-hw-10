@@ -1,69 +1,62 @@
 import { fetchBreeds, fetchCatByBreed } from '/src/cat-api';
 import Notiflix from 'notiflix';
+import SlimSelect from 'slim-select';
+import 'slim-select/dist/slimselect.css';
 
-const breedSelect = document.querySelector('.breed-select');
-const catInfo = document.querySelector('.cat-info');
-const select = document.querySelector('select');
-const loader = document.querySelector('.loader');
-
-select.addEventListener('change', onSelectChange);
-
-fetchBreeds()
-  .then(data => {
-    breedSelect.innerHTML = createMarkupOption(data);
-  })
-  .catch(err => promisError(err));
+const ref = {
+  selector: document.querySelector('.breed-select'),
+  catInfo: document.querySelector('.cat-info'),
+  loader: document.querySelector('.loader'),
+  error: document.querySelector('.error'),
+};
+const { selector, catInfo, loader, error } = ref;
 
 function showLoader() {
   loader.style.display = 'block';
 }
-
 function hideLoader() {
   loader.style.display = 'none';
 }
+error.classList.add('is-hidden');
+catInfo.classList.add('is-hidden');
 
-function onSelectChange(e) {
-  const id = e.currentTarget.value;
-  showLoader();
-  catInfo.classList.add('cat-info');
-  fetchCatByBreed(id)
-    .then(data => {
-      catInfo.innerHTML = createMarkupInfo(data);
-      hideLoader();
-    })
-    .catch(err => {
-      promisError(err);
-      hideLoader();
+let arrayId = [];
+fetchBreeds()
+  .then(data => {
+    data.forEach(element => {
+      arrayId.push({ text: element.name, value: element.id });
     });
+    new SlimSelect({
+      select: selector,
+      data: arrayId,
+    });
+  })
+  .catch(fetchError);
+
+selector.addEventListener('change', onSelectBreed);
+
+function onSelectBreed(event) {
+  showLoader();
+  selector.classList.add('is-hidden');
+  catInfo.classList.add('is-hidden');
+
+  const breedId = event.currentTarget.value;
+  fetchCatByBreed(breedId)
+    .then(data => {
+      hideLoader();
+      selector.classList.remove('is-hidden');
+      const { url, breeds } = data[0];
+
+      catInfo.innerHTML = `<div class="box-img"><img src="${url}" alt="${breeds[0].name}" width="400"/></div><div class="box"><h1>${breeds[0].name}</h1><p>${breeds[0].description}</p><p><b>Temperament:</b> ${breeds[0].temperament}</p></div>`;
+      catInfo.classList.remove('is-hidden');
+    })
+    .catch(fetchError);
 }
 
-function createMarkupOption(arr) {
-  return arr
-    .map(({ id, name }) => `<option value="${id}">${name}</option>`)
-    .join('');
-}
-
-function createMarkupInfo(arr) {
-  return arr
-    .map(
-      ({
-        url,
-        breeds: {
-          0: { alt_names = '', description },
-        },
-      }) => `<div class="markup">
-    <img src="${url}" alt="cat" width="400" > 
-    <div class="markup-designe">
-       <h2> ${alt_names} </h2>
-    <p>${description}</p>
-      </div>
-    </div>`
-    )
-    .join('');
-}
-
-function promisError(srt) {
+function fetchError(error) {
+  selector.classList.remove('is-hidden');
+  hideLoader();
   Notiflix.Notify.failure(
-    'Oops! Something went wrong! Try reloading the page!'
+    'Oops! Something went wrong! Try reloading the page or select another cat breed!'
   );
 }
