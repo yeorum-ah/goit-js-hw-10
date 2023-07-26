@@ -13,14 +13,20 @@ const { selector, catInfo, loader, error } = ref;
 
 function showLoader() {
   loader.style.display = 'block';
+  selector.classList.add('is-hidden');
+  catInfo.classList.add('is-hidden');
 }
+
 function hideLoader() {
   loader.style.display = 'none';
 }
+
 error.classList.add('is-hidden');
 catInfo.classList.add('is-hidden');
 
 let arrayId = [];
+showLoader();
+
 fetchBreeds()
   .then(data => {
     data.forEach(element => {
@@ -30,6 +36,7 @@ fetchBreeds()
       select: selector,
       data: arrayId,
     });
+    hideLoader();
   })
   .catch(fetchError);
 
